@@ -5,22 +5,15 @@ import google.generativeai as genai
 
 app = Flask(__name__)
 
-# API Key setup from Render Environment
+# API Setup
 api_key = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=api_key)
-
-# Safety Settings: Taaki AI har baat pe block na kare
-safety_settings = [
-    {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-    {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-]
+if api_key:
+    genai.configure(api_key=api_key)
 
 model = genai.GenerativeModel('gemini-pro')
 
 def clean_text(text):
-    # Emojis hatane ke liye regex
+    # Strict No-Emoji Policy
     return re.sub(r'[^\x00-\x7f]', r'', text).strip()
 
 @app.route('/')
@@ -33,34 +26,25 @@ def chat():
         data = request.json
         user_msg = data.get("message", "")
         
+        # Multi-Language Prompt Logic
         prompt = (
             "Identity: You are PsychoSense AI, created by Abdul Hai. "
-            "Role: Strict Psychology Coach. Language: Hinglish. "
-            "Rules: NO EMOJIS. Be blunt, direct, and observant. "
-            f"User says: {user_msg}"
+            "Role: Professional and blunt psychology coach. "
+            "Language Rule: Detect the user's language and respond in the SAME language. "
+            "If the user speaks Bengali, reply in Bengali. If Urdu, reply in Urdu. "
+            "If Hindi/English, reply in Hinglish. "
+            "Constraint: STRICTLY NO EMOJIS. Be direct and observant. "
+            f"User message: {user_msg}"
         )
         
-        response = model.generate_content(prompt, safety_settings=safety_settings)
-        reply = clean_text(response.text) if response.text else "Dimaag kaam nahi kar raha, phir se bol."
+        response = model.generate_content(prompt)
+        reply = clean_text(response.text) if response.text else "Dimaag blank ho gaya, phir se bol."
         
         return jsonify({"reply": reply})
     except Exception as e:
-        return jsonify({"reply": f"System Error: {str(e)[:30]}"})
+        return jsonify({"reply": f"System Error: Thoda wait kar le."})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host='0.0.0.0', port=port)
-    try:
-        context = "\n".join(chat_history[-5:])
-        full_prompt = f"{SYSTEM_INSTRUCTION}\nContext:\n{context}\nUser: {user_input}\nPsychoSense:"
-        response = model.generate_content(full_prompt)
-        reply = remove_emojis(response.text).strip()
-        chat_history.append(f"User: {user_input}")
-        chat_history.append(f"AI: {reply}")
-        return jsonify({"reply": reply})
-    except Exception as e:
-        return jsonify({"reply": "System busy hai, phir se try kar."})
-
-if __name__ == "__main__":
+    # Render Port Binding
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
