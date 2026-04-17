@@ -1,39 +1,42 @@
-let chat = document.getElementById("chat");
-
-function addMsg(text, type){
-    let div = document.createElement("div");
-    div.className = "msg " + type;
-    div.innerHTML = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
+body {
+    background: #121212;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
 }
-
-async function send(){
-    try {
-        let input = document.getElementById("input");
-        let msg = input.value;
-        if(!msg) return;
-
-        addMsg(msg,"user");
-        input.value="";
-
-        let typing = document.createElement("div");
-        typing.className = "msg bot";
-        typing.innerHTML = "Typing...";
-        chat.appendChild(typing);
-
-        let res = await fetch("/chat",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({ message: msg })
-        });
-
-        let data = await res.json();
-
-        typing.remove();
-
-        addMsg(
-            data.reply + "<br><small>" + data.mode + "</small>",
+.chat-container {
+    width: 100%;
+    max-width: 400px;
+    background: #1e1e1e;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    border: 1px solid #333;
+}
+header {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+}
+#chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.msg { padding: 10px; border-radius: 8px; max-width: 80%; }
+.user { align-self: flex-end; background: #007bff; }
+.ai { align-self: flex-start; background: #333; }
+.input-area { padding: 15px; display: flex; gap: 5px; }
+input { flex: 1; padding: 10px; border-radius: 5px; border: none; outline: none; }
+button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
             "bot"
         );
 
