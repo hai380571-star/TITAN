@@ -2,11 +2,9 @@ from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
-# 🔥 Memory + Creator
 memory = {"lazy": 0, "success": 0}
 CREATOR = "Abdul Hai"
 
-# 🧠 Analyze Function
 def analyze(text):
     t = (text or "").lower()
 
@@ -24,27 +22,25 @@ def analyze(text):
     return "NEUTRAL"
 
 
-# 🧠 Reply Function
 def reply(mode, msg):
     m = (msg or "").lower()
 
     if "creator" in m or "kisne banaya" in m:
-        return f"Mujhe {CREATOR} ne banaya hai 😏"
+        return f"Mujhe {CREATOR} ne banaya hai"
 
     if mode == "STRICT":
-        return "Sach bol—tu avoid kar raha hai. Start kar abhi."
+        return "Sach bol - tu avoid kar raha hai. Start kar abhi."
 
     elif mode == "SOFT":
-        return "Good. Tu effort daal raha hai—continue kar."
+        return "Good. Tu effort daal raha hai - continue kar."
 
     elif mode == "FUN":
-        return "Bakchodi mode ON 😏 bol kya kare?"
+        return "Bakchodi mode ON. Bol kya kare?"
 
-    return "Seedha bol—andar kya chal raha hai?"
+    return "Seedha bol - andar kya chal raha hai?"
 
 
-# 🎨 HTML (inline UI)
-HTML = """
+HTML = '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -80,7 +76,6 @@ body {
     margin:6px;
     border-radius:12px;
     max-width:75%;
-    word-wrap:break-word;
 }
 
 .user {
@@ -103,12 +98,11 @@ input {
     padding:12px;
     border-radius:20px;
     border:none;
-    outline:none;
 }
 
 button {
     margin-left:5px;
-    padding:10px 14px;
+    padding:10px;
     background:#22c55e;
     color:white;
     border:none;
@@ -128,7 +122,7 @@ button {
 
 <div class="footer">
 <input id="input" placeholder="Type your thoughts...">
-<button onclick="send()">➤</button>
+<button onclick="send()">Send</button>
 </div>
 
 <script>
@@ -165,21 +159,19 @@ async function send(){
         let data = await res.json();
 
         typing.remove();
-
         addMsg(data.reply + "<br><small>"+data.mode+"</small>","bot");
 
     } catch(err){
         typing.remove();
-        addMsg("Server error 😵","bot");
+        addMsg("Server error","bot");
     }
 }
 </script>
 
 </body>
 </html>
-"""
+'''
 
-# 🌐 Routes
 @app.route("/")
 def home():
     return render_template_string(HTML)
@@ -192,7 +184,7 @@ def chat():
         user = data.get("message") or data.get("msg") or ""
 
         if not user:
-            return jsonify({"reply": "Kuch to bol 😄", "mode": "error"})
+            return jsonify({"reply": "Kuch to bol", "mode": "error"})
 
         mode = analyze(user)
         res = reply(mode, user)
@@ -201,28 +193,7 @@ def chat():
 
     except Exception as e:
         print("ERROR:", e)
-        return jsonify({"reply": "Server error 😵", "mode": "error"})
-
-
-if __name__ == "__main__":
-    app.run(debug=True)    elif mode == "FUN":
-        return "Bakchodi mode ON 😏 bol kya kare?"
-
-    return "Seedha bol—andar kya chal raha hai?"
-
-
-@app.route("/")
-def home():
-    return render_template("index.html")
-
-
-@app.route("/chat", methods=["POST"])
-def chat():
-    user = request.json.get("msg")
-    mode = analyze(user)
-    res = reply(mode, user)
-
-    return jsonify({"reply": res, "mode": mode})
+        return jsonify({"reply": "Server error", "mode": "error"})
 
 
 if __name__ == "__main__":
