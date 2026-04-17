@@ -1,86 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>PsychoSense</title>
+<title>PsychoSense V2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body {
-    background:#0f172a;
-    font-family:sans-serif;
-    margin:0;
-    color:white;
-}
-
-.header {
-    display:flex;
-    justify-content:space-between;
-    padding:12px;
-    background:#020617;
-}
-
-#chat {
-    height:75vh;
-    overflow-y:auto;
-    padding:10px;
-}
-
-.msg {
-    padding:10px;
-    margin:6px;
-    border-radius:12px;
-    max-width:75%;
-    animation:fade 0.3s ease;
-}
-
-.user {
-    background:#22c55e;
-    margin-left:auto;
-}
-
-.bot {
-    background:#1e293b;
-}
-
-.footer {
-    position:fixed;
-    bottom:0;
-    width:100%;
-    display:flex;
-    padding:10px;
-    background:#020617;
-}
-
-input {
-    flex:1;
-    padding:12px;
-    border-radius:20px;
-    border:none;
-}
-
-button {
-    margin-left:5px;
-    padding:10px;
-    background:#22c55e;
-    color:white;
-    border:none;
-    border-radius:20px;
-}
-
-@keyframes fade {
-    from {opacity:0; transform:translateY(10px);}
-    to {opacity:1;}
-}
-</style>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
 
 <div class="header">
     <div>
-        <b>PsychoSense</b><br>
-        <small>Reads your patterns</small>
+        <b>PsychoSense V2</b><br>
+        <small>AI Behavioral Mirror</small>
     </div>
-    <div>☰</div>
 </div>
 
 <div id="chat"></div>
@@ -90,39 +23,7 @@ button {
     <button onclick="send()">➤</button>
 </div>
 
-<script>
-let chat = document.getElementById("chat");
-
-function addMsg(text, type){
-    let div = document.createElement("div");
-    div.className = "msg " + type;
-    div.innerHTML = text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-async function send(){
-    let input = document.getElementById("input");
-    let msg = input.value;
-    if(!msg) return;
-
-    addMsg(msg,"user");
-    input.value="";
-
-    addMsg("Typing...","bot");
-
-    let res = await fetch("/chat",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({msg:msg})
-    });
-
-    let data = await res.json();
-
-    chat.lastChild.remove();
-    addMsg(data.reply + "<br><small>"+data.mode+"</small>","bot");
-}
-</script>
+<script src="/static/script.js"></script>
 
 </body>
-  </html>
+</html>
