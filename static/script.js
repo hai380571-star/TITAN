@@ -34,6 +34,34 @@ body {
     background:#0f172a;
     color:white;
     display:flex;
+const sendBtn = document.getElementById('send-btn');
+const userInput = document.getElementById('user-input');
+const chatBox = document.getElementById('chat-box');
+
+sendBtn.addEventListener('click', () => {
+    const msg = userInput.value.trim();
+    if (!msg) return;
+
+    appendMsg('user', msg);
+    userInput.value = '';
+
+    fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+    })
+    .then(res => res.json())
+    .then(data => appendMsg('ai', data.reply))
+    .catch(() => appendMsg('ai', "Server thak gaya hai!"));
+});
+
+function appendMsg(sender, text) {
+    const div = document.createElement('div');
+    div.className = `msg ${sender}`;
+    div.innerText = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
     flex-direction:column;
     height:100vh;
 }
