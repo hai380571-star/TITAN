@@ -6,8 +6,18 @@ app = Flask(__name__)
 # ===== MEMORY =====
 memory = {"lazy": 0, "success": 0}
 history = []
-last_mode = None
+last_reply = ""
 CREATOR = "Abdul Hai"
+
+# ===== HELPER (NO REPEAT) =====
+def pick(options):
+    global last_reply
+    random.shuffle(options)
+    for opt in options:
+        if opt != last_reply:
+            last_reply = opt
+            return opt
+    return options[0]
 
 # ===== ANALYZE =====
 def analyze(text):
@@ -26,14 +36,11 @@ def analyze(text):
 
     return "NEUTRAL"
 
-
-# ===== REPLY ENGINE =====
+# ===== REPLY =====
 def reply(mode, msg):
-    global history, last_mode
-
+    global history
     m = (msg or "").lower()
 
-    # save history
     history.append(m)
     if len(history) > 6:
         history.pop(0)
@@ -42,85 +49,79 @@ def reply(mode, msg):
     if any(x in m for x in ["creator", "kisne banaya", "who made you"]):
         return "Mujhe " + CREATOR + " ne banaya hai"
 
-    # pattern detect
+    # patterns
     repeat_count = history.count(m)
 
     avoid_words = ["kuch nhi", "nhi", "pata nhi"]
-    avoid_count = 0
-    for h in history:
-        for w in avoid_words:
-            if w in h:
-                avoid_count += 1
-                break
+    avoid_count = sum(1 for h in history if any(w in h for w in avoid_words))
 
-    frustration = False
-    for w in ["abe", "yaar", "chup", "bhag"]:
-        if w in m:
-            frustration = True
+    frustration = any(w in m for w in ["abe", "yaar", "bhag"])
 
-    # ===== SMART RESPONSES =====
+    # ===== RESPONSES =====
 
-    # greeting
     if "hi" in m or "hello" in m:
-        return random.choice([
+        return pick([
             "Aaj kya chal raha hai dimaag me",
             "Seedha bol, kya soch raha hai",
+            "Kya scene hai aaj",
         ])
 
-    # repeat detection
     if repeat_count >= 2:
-        return random.choice([
+        return pick([
             "Tu same cheez repeat kar raha hai",
             "Ye line tu pehle bhi bol chuka hai",
+            "Repeat karne se baat change nahi hogi",
         ])
 
-    # avoidance detection
     if avoid_count >= 3:
-        return random.choice([
+        return pick([
             "Tu lagataar avoid kar raha hai",
-            "Itna ignore karega to baat wahi rahegi",
+            "Itna ignore karega to problem wahi rahegi",
+            "Tu sach bolne se bach raha hai",
         ])
 
-    # frustration detection
     if frustration:
-        return random.choice([
+        return pick([
             "Tone change ho raha hai tera",
             "Gussa aa raha hai kya",
+            "Relax kar, phir bol",
         ])
 
-    # ===== MODE LOGIC =====
+    # ===== MODE =====
 
     if mode == "STRICT":
         if memory["lazy"] > 3:
-            return random.choice([
+            return pick([
                 "Ye teri habit ban rahi hai delay karne ki",
                 "Tu khud ko seriously nahi le raha",
+                "Tu bas push kar raha hai, action nahi le raha",
             ])
-        return random.choice([
+        return pick([
             "Tu avoid kar raha hai, start kar",
             "Action le warna kuch change nahi hoga",
+            "Bahane kam, kaam zyada",
         ])
 
     elif mode == "SOFT":
-        return random.choice([
+        return pick([
             "Good, tu effort daal raha hai",
             "Progress ho raha hai, rukna mat",
+            "Consistency aa rahi hai",
         ])
 
     elif mode == "FUN":
-        return random.choice([
+        return pick([
             "Thoda chill bhi zaroori hai",
             "Mood halka kar raha hai tu",
+            "Break bhi important hota hai",
         ])
 
-    # neutral
-    return random.choice([
+    return pick([
         "Tu clearly bol nahi raha abhi",
         "Andar kuch chal raha hai",
         "Main observe kar raha hoon",
         "Seedha bol, kya issue hai",
     ])
-
 
 # ===== UI =====
 HTML = """
@@ -129,68 +130,16 @@ HTML = """
 <head>
 <title>PsychoSense AI</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-body {
-    margin:0;
-    font-family:sans-serif;
-    background:#0f172a;
-    color:white;
-    display:flex;
-    flex-direction:column;
-    height:100vh;
-}
-
-.header {
-    padding:12px;
-    background:#020617;
-}
-
-#chat {
-    flex:1;
-    overflow-y:auto;
-    padding:10px;
-    display:flex;
-    flex-direction:column;
-}
-
-.msg {
-    padding:10px;
-    margin:6px;
-    border-radius:12px;
-    max-width:75%;
-}
-
-.user {
-    background:#22c55e;
-    margin-left:auto;
-}
-
-.bot {
-    background:#1e293b;
-}
-
-.footer {
-    display:flex;
-    padding:10px;
-    background:#020617;
-}
-
-input {
-    flex:1;
-    padding:12px;
-    border-radius:20px;
-    border:none;
-}
-
-button {
-    margin-left:5px;
-    padding:10px;
-    background:#22c55e;
-    color:white;
-    border:none;
-    border-radius:20px;
-}
+body {margin:0;font-family:sans-serif;background:#0f172a;color:white;display:flex;flex-direction:column;height:100vh;}
+.header {padding:12px;background:#020617;}
+#chat {flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;}
+.msg {padding:10px;margin:6px;border-radius:12px;max-width:75%;}
+.user {background:#22c55e;margin-left:auto;}
+.bot {background:#1e293b;}
+.footer {display:flex;padding:10px;background:#020617;}
+input {flex:1;padding:12px;border-radius:20px;border:none;}
+button {margin-left:5px;padding:10px;background:#22c55e;color:white;border:none;border-radius:20px;}
 </style>
 </head>
 
@@ -260,7 +209,6 @@ async function send(){
 def home():
     return render_template_string(HTML)
 
-
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
@@ -273,7 +221,6 @@ def chat():
     res = reply(mode, user)
 
     return jsonify({"reply": res})
-
 
 if __name__ == "__main__":
     app.run()
