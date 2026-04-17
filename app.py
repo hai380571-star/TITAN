@@ -3,10 +3,13 @@ import random
 
 app = Flask(__name__)
 
+# ===== MEMORY =====
 memory = {"lazy": 0, "success": 0}
+history = []
 last_mode = None
 CREATOR = "Abdul Hai"
 
+# ===== ANALYZE =====
 def analyze(text):
     t = (text or "").lower()
 
@@ -24,70 +27,103 @@ def analyze(text):
     return "NEUTRAL"
 
 
+# ===== REPLY ENGINE =====
 def reply(mode, msg):
-    global last_mode
+    global history, last_mode
+
     m = (msg or "").lower()
+
+    # save history
+    history.append(m)
+    if len(history) > 6:
+        history.pop(0)
 
     # creator
     if any(x in m for x in ["creator", "kisne banaya", "who made you"]):
-        return f"Mujhe {CREATOR} ne banaya hai"
+        return "Mujhe " + CREATOR + " ne banaya hai"
 
-    # savage level
-    savage = memory["lazy"]
+    # pattern detect
+    repeat_count = history.count(m)
 
-    # direct reactions
+    avoid_words = ["kuch nhi", "nhi", "pata nhi"]
+    avoid_count = 0
+    for h in history:
+        for w in avoid_words:
+            if w in h:
+                avoid_count += 1
+                break
+
+    frustration = False
+    for w in ["abe", "yaar", "chup", "bhag"]:
+        if w in m:
+            frustration = True
+
+    # ===== SMART RESPONSES =====
+
+    # greeting
     if "hi" in m or "hello" in m:
         return random.choice([
-            "Haan bol, kya chal raha hai?",
-            "Aaj kya scene hai?",
+            "Aaj kya chal raha hai dimaag me",
+            "Seedha bol, kya soch raha hai",
         ])
 
-    if "nhi" in m or "kuch nhi" in m:
+    # repeat detection
+    if repeat_count >= 2:
         return random.choice([
-            "Har baar 'kuch nahi' ke peeche kuch hota hai",
-            "Tu avoid kar raha hai bas bol nahi raha",
+            "Tu same cheez repeat kar raha hai",
+            "Ye line tu pehle bhi bol chuka hai",
         ])
 
-    if "chal bhag" in m or "abe" in m:
+    # avoidance detection
+    if avoid_count >= 3:
         return random.choice([
-            "Attitude aa raha hai, par reason bhi hoga",
-            "Bhag sakta hai, par problem wahi rahegi",
+            "Tu lagataar avoid kar raha hai",
+            "Itna ignore karega to baat wahi rahegi",
         ])
 
-    # mode behavior
+    # frustration detection
+    if frustration:
+        return random.choice([
+            "Tone change ho raha hai tera",
+            "Gussa aa raha hai kya",
+        ])
+
+    # ===== MODE LOGIC =====
+
     if mode == "STRICT":
-        if savage > 3:
+        if memory["lazy"] > 3:
             return random.choice([
-                "Tu sirf delay nahi kar raha, ye tera pattern ban gaya hai",
-                "Sach bol, tu khud ko hi ignore kar raha hai",
+                "Ye teri habit ban rahi hai delay karne ki",
+                "Tu khud ko seriously nahi le raha",
             ])
         return random.choice([
-            "Tu avoid kar raha hai, start kar abhi",
-            "Bahane kam, action zyada",
+            "Tu avoid kar raha hai, start kar",
+            "Action le warna kuch change nahi hoga",
         ])
 
     elif mode == "SOFT":
         return random.choice([
             "Good, tu effort daal raha hai",
-            "Nice, consistency aa rahi hai",
+            "Progress ho raha hai, rukna mat",
         ])
 
     elif mode == "FUN":
         return random.choice([
-            "Chal thoda chill karte hain",
+            "Thoda chill bhi zaroori hai",
             "Mood halka kar raha hai tu",
         ])
 
     # neutral
     return random.choice([
-        "Seedha bol, kya chal raha hai?",
         "Tu clearly bol nahi raha abhi",
-        "Andar kuch to chal raha hai",
-        "Main sun raha hoon, bol",
+        "Andar kuch chal raha hai",
+        "Main observe kar raha hoon",
+        "Seedha bol, kya issue hai",
     ])
 
 
-HTML = '''
+# ===== UI =====
+HTML = """
 <!DOCTYPE html>
 <html>
 <head>
@@ -217,8 +253,9 @@ async function send(){
 
 </body>
 </html>
-'''
+"""
 
+# ===== ROUTES =====
 @app.route("/")
 def home():
     return render_template_string(HTML)
