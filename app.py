@@ -5,16 +5,22 @@ import google.generativeai as genai
 
 app = Flask(__name__)
 
-# 1. API Initialization Check
+# 1. API Configuration
+# Render ke Environment Variables se key uthayega
 api_key = os.getenv("GEMINI_API_KEY")
 
-if not api_key:
-    print("CRITICAL: GEMINI_API_KEY ki value khali mili hai! Render Settings check karo.")
-else:
-    print(f"SUCCESS: API Key mil gayi hai (Starts with: {api_key[:5]}...)")
+if api_key:
     genai.configure(api_key=api_key)
+    print("SUCCESS: API Key connected successfully!")
+else:
+    print("CRITICAL: API Key not found in Environment Variables!")
 
-model = genai.GenerativeModel('gemini-pro')
+# Naya Model jo 100% kaam karega
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+def clean_text(text):
+    # Emojis hatane ke liye
+    return re.sub(r'[^\x00-\x7f]', r'', text).strip()
 
 @app.route('/')
 def home():
@@ -25,28 +31,30 @@ def chat():
     try:
         data = request.json
         user_msg = data.get("message", "")
-        print(f"DEBUG: User ne kaha -> {user_msg}")
-
-        # Safety checking for API configuration
-        if not api_key:
-            return jsonify({"reply": "Backend Error: API Key nahi mili."})
-
-        prompt = f"Respond as PsychoSense (Coach) in the user's language. No emojis. User: {user_msg}"
         
-        # Gemini API Call
+        # Identity aur Multi-language instruction
+        prompt = (
+            "Identity: You are PsychoSense AI, created by Abdul Hai. "
+            "Role: Blunt and observant Psychology Coach. "
+            "Rule: Respond ONLY in the language the user is speaking (Bengali/Urdu/Hinglish). "
+            "Constraint: STRICTLY NO EMOJIS. Be direct and concise. "
+            f"User says: {user_msg}"
+        )
+        
+        # AI Response generate karna
         response = model.generate_content(prompt)
         
-        if response and response.text:
-            print(f"DEBUG: AI ka jawab -> {response.text[:20]}...")
-            return jsonify({"reply": response.text.strip()})
+        if response.text:
+            final_reply = clean_text(response.text)
+            return jsonify({"reply": final_reply})
         else:
-            return jsonify({"reply": "AI ne khali jawab diya. Key check karo."})
+            return jsonify({"reply": "AI ne koi jawab nahi diya, phir se try kar."})
 
     except Exception as e:
-        # Ye line Render ke logs mein ERROR dikhayegi
-        print(f"ERROR OCCURRED: {str(e)}")
-        return jsonify({"reply": f"Asli Error: {str(e)[:50]}"})
+        # Error screen pe dikhane ke liye debugging line
+        return jsonify({"reply": f"Asli Error: {str(e)}"})
 
 if __name__ == "__main__":
+    # Render port binding
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
