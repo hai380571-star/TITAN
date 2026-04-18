@@ -5,15 +5,16 @@ import google.generativeai as genai
 
 app = Flask(__name__)
 
-# API Setup
+# 1. API Configuration
 api_key = os.getenv("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
 
-# 1.5-flash model name (Latest & Stable)
+# 2. Model Setup (Strictly 1.5-flash)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 def clean_text(text):
+    # Emojis hatane ka logic
     return re.sub(r'[^\x00-\x7f]', r'', text).strip()
 
 @app.route('/')
@@ -26,23 +27,24 @@ def chat():
         data = request.json
         user_msg = data.get("message", "")
         
-        # Identity Logic
+        # Identity aur Multi-language instruction
         prompt = (
             "You are PsychoSense AI by Abdul Hai. "
-            "Respond in the same language as the user. NO EMOJIS. "
-            f"User: {user_msg}"
+            "Rule: Respond ONLY in the language the user is speaking. "
+            "Constraint: NO EMOJIS. Be blunt and direct. "
+            f"User says: {user_msg}"
         )
         
-        # Response with latest API handling
+        # AI Response
         response = model.generate_content(prompt)
         
         if response.text:
             return jsonify({"reply": clean_text(response.text)})
         else:
-            return jsonify({"reply": "AI khamosh hai, phir se pucho."})
+            return jsonify({"reply": "AI ne response nahi diya. Phir se try karo."})
 
     except Exception as e:
-        # Is baar error message short rakha hai
+        # Asli error pakadne ke liye short message
         return jsonify({"reply": f"Technical Glitch: {str(e)[:50]}"})
 
 if __name__ == "__main__":
