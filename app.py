@@ -1,20 +1,16 @@
 import os
 import re
-import google.generativeai as genai
 from flask import Flask, request, jsonify, render_template
+import google.generativeai as genai
 
 app = Flask(__name__)
 
-# 1. SDK Version Logging (BCA Debugging)
-import google.generativeai as pkg_version
-print(f"SYSTEM CHECK: Google Generative AI Version = {pkg_version.__version__}")
-
-# 2. API Setup
+# 1. API Configuration
 api_key = os.getenv("GEMINI_API_KEY")
 if api_key:
     genai.configure(api_key=api_key)
 
-# 3. Model Setup (Trying the most stable string)
+# 2. Model Setup
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 def clean_text(text):
@@ -33,7 +29,7 @@ def chat():
         prompt = (
             "You are PsychoSense AI by Abdul Hai. "
             "Respond ONLY in the user's language. NO EMOJIS. "
-            f"User: {user_msg}"
+            f"User says: {user_msg}"
         )
         
         response = model.generate_content(prompt)
@@ -41,11 +37,10 @@ def chat():
         if response.text:
             return jsonify({"reply": clean_text(response.text)})
         else:
-            return jsonify({"reply": "AI khamosh hai, phir se pucho."})
+            return jsonify({"reply": "AI ne response nahi diya."})
 
     except Exception as e:
-        # Agar 1.5-flash fail ho, toh ye error bata dega
-        return jsonify({"reply": f"Technical Glitch: {str(e)[:100]}"})
+        return jsonify({"reply": f"System Error: {str(e)[:50]}"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
