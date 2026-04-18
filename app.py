@@ -5,21 +5,15 @@ import google.generativeai as genai
 
 app = Flask(__name__)
 
-# 1. API Configuration
-# Render ke Environment Variables se key uthayega
+# API Setup
 api_key = os.getenv("GEMINI_API_KEY")
-
 if api_key:
     genai.configure(api_key=api_key)
-    print("SUCCESS: API Key connected successfully!")
-else:
-    print("CRITICAL: API Key not found in Environment Variables!")
 
-# Naya Model jo 100% kaam karega
+# 1.5-flash model name (Latest & Stable)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 def clean_text(text):
-    # Emojis hatane ke liye
     return re.sub(r'[^\x00-\x7f]', r'', text).strip()
 
 @app.route('/')
@@ -32,29 +26,25 @@ def chat():
         data = request.json
         user_msg = data.get("message", "")
         
-        # Identity aur Multi-language instruction
+        # Identity Logic
         prompt = (
-            "Identity: You are PsychoSense AI, created by Abdul Hai. "
-            "Role: Blunt and observant Psychology Coach. "
-            "Rule: Respond ONLY in the language the user is speaking (Bengali/Urdu/Hinglish). "
-            "Constraint: STRICTLY NO EMOJIS. Be direct and concise. "
-            f"User says: {user_msg}"
+            "You are PsychoSense AI by Abdul Hai. "
+            "Respond in the same language as the user. NO EMOJIS. "
+            f"User: {user_msg}"
         )
         
-        # AI Response generate karna
+        # Response with latest API handling
         response = model.generate_content(prompt)
         
         if response.text:
-            final_reply = clean_text(response.text)
-            return jsonify({"reply": final_reply})
+            return jsonify({"reply": clean_text(response.text)})
         else:
-            return jsonify({"reply": "AI ne koi jawab nahi diya, phir se try kar."})
+            return jsonify({"reply": "AI khamosh hai, phir se pucho."})
 
     except Exception as e:
-        # Error screen pe dikhane ke liye debugging line
-        return jsonify({"reply": f"Asli Error: {str(e)}"})
+        # Is baar error message short rakha hai
+        return jsonify({"reply": f"Technical Glitch: {str(e)[:50]}"})
 
 if __name__ == "__main__":
-    # Render port binding
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
