@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daybook - AH Accounting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="sidebar">
+        <h3>AH Accounting</h3>
+        <a href="/dashboard">🏠 Dashboard</a>
+        <a href="/daybook" class="active">📅 Daybook</a>
+        <a href="/stock">📦 Stock Summary</a>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <h2>📅 Daybook Records</h2>
+            <form action="/daybook" method="GET" class="filter-box">
+                <label>Select Date: </label>
+                <input type="date" name="date" value="{{ search_date }}" id="date_picker" onchange="this.form.submit()">
+            </form>
+
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Item Name</th>
+                        <th>Qty Sold</th>
+                        <th>Total Amount</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>{{ sale.id }}</td>
+                        <td>{{ sale.item_name }}</td>
+                        <td>{{ sale.qty }}</td>
+                        <td>{{ sale.total }}</td>
+                        <td>{{ sale.date }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align:center;">Bhai, is date par koi entry nahi mili!</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
