@@ -1,39 +1,69 @@
 let cart = [];
-document.getElementById('displayDate').innerText = "Date: " + new Date().toLocaleDateString();
+document.getElementById('billDate').innerText = new Date().toLocaleDateString();
 
-// Fast Click Items (Example items)
-function fastAdd(name, price, cost) {
+// Section Switching Logic
+function showSection(id) {
+    document.querySelectorAll('section').forEach(s => s.classList.add('d-none'));
+    document.getElementById('sec-' + id).classList.remove('d-none');
+    // Sidebar close karo (mobile ke liye)
+    let sidebar = bootstrap.Offcanvas.getInstance(document.getElementById('menuSidebar'));
+    if(sidebar) sidebar.hide();
+}
+
+function addToCart(name, price, cost) {
     let item = cart.find(i => i.name === name);
     if(item) { item.qty++; } 
     else { cart.push({name, price, cost, qty: 1}); }
-    updateTable();
+    renderBill();
 }
 
-function updateTable() {
+function renderBill() {
     let tbody = document.querySelector("#billTable tbody");
     tbody.innerHTML = "";
-    let sub = 0;
+    let total = 0;
     cart.forEach(i => {
-        let t = i.price * i.qty;
-        sub += t;
-        tbody.innerHTML += `<tr><td>${i.name}</td><td>${i.price}</td><td>${i.qty}</td><td>${t}</td></tr>`;
+        total += i.price * i.qty;
+        tbody.innerHTML += `<tr><td>${i.name}</td><td>${i.qty}</td><td>${i.price * i.qty}</td></tr>`;
     });
-    document.getElementById('subTotal').innerText = sub;
-    calculateNet();
+    document.getElementById('netTotal').innerText = total;
 }
 
-function calculateNet() {
-    let sub = parseFloat(document.getElementById('subTotal').innerText);
-    let disc = parseFloat(document.getElementById('discountInput').value) || 0;
-    document.getElementById('netTotal').innerText = sub - disc;
-}
-
-function saveBill() {
-    let net = parseFloat(document.getElementById('netTotal').innerText);
+function finalSubmit() {
+    let grand = parseFloat(document.getElementById('netTotal').innerText);
     let totalCost = cart.reduce((a, b) => a + (b.cost * b.qty), 0);
     
-    let billData = {
+    let data = {
         company_id: document.getElementById('coId').value,
+        total: grand,
+        profit: grand - totalCost
+    };
+
+    fetch('/save-bill', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    }).then(() => {
+        window.print();
+        location.reload();
+    });
+}
+
+function saveNewItem() {
+    let data = {
+        name: document.getElementById('newItemName').value,
+        price: document.getElementById('newItemPrice').value,
+        cost: document.getElementById('newItemCost').value,
+        co_id: document.getElementById('coId').value
+    };
+    fetch('/add-item', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    }).then(() => {
+        alert("Item Saved!");
+        location.reload();
+    });
+}
         type: document.getElementById('billType').value,
         ref_no: document.getElementById('refInput').value,
         total: net,
