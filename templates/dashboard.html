@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - AH Accounting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="sidebar">
+        <h3>AH Accounting</h3>
+        <a href="/dashboard" class="active">🏠 Dashboard</a>
+        <a href="/daybook">📅 Daybook</a>
+        <a href="/stock">📦 Stock Summary</a>
+    </div>
+
+    <div class="main-content">
+        <div class="card no-print">
+            <h2 id="form-title">Add / Modify Item</h2>
+            <form action="/save-item" method="POST" class="horizontal-form">
+                <input type="hidden" name="item_id" id="item_id">
+                <input type="text" name="name" id="item_name" placeholder="Item Name" required>
+                <input type="number" name="cost" id="item_cost" placeholder="Cost (Optional)">
+                <input type="number" name="price" id="item_price" placeholder="Selling Price" required>
+                <input type="number" name="stock" id="item_stock" placeholder="Opening Stock">
+                <button type="submit" class="btn-save">Save Item</button>
+            </form>
+        </div>
+
+        <div class="card printable-bill">
+            <h2>New Invoice</h2>
+            <div class="billing-inputs no-print">
+                <select id="bill_item_select" onchange="updatePrice()">
+                    <option value="">Select Item</option>
+                    {% for item in items %}
+                    <option value="{{ item.id }}" data-price="{{ item.price }}">{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="number" id="item_qty" placeholder="Qty" oninput="calculateBill()">
+                <input type="number" id="discount_input" placeholder="Discount (Flat)" oninput="calculateBill()">
+            </div>
+
+            <table class="bill-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="bill_item_name">-</td>
+                        <td id="bill_unit_price">0</td>
+                        <td id="bill_qty_display">0</td>
+                        <td id="bill_subtotal">0</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="total-section">
+                <p>Subtotal: <span id="display_subtotal">0</span></p>
+                <p>Discount: <span id="display_discount">0</span></p>
+                <hr>
+                <h3>Grand Total: <span id="display_final_total">0</span></h3>
+            </div>
+            
+            <button onclick="printInvoice()" class="btn-print no-print">Print & Save Bill</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
