@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Summary - AH Accounting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="sidebar">
+        <h3>AH Accounting</h3>
+        <a href="/dashboard">🏠 Dashboard</a>
+        <a href="/daybook">📅 Daybook</a>
+        <a href="/stock" class="active">📦 Stock Summary</a>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <h2>📦 Stock Summary</h2>
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Current Stock</th>
+                        <th>Cost Price</th>
+                        <th>Sale Price</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventory %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td><strong>{{ item.stock }}</strong></td>
+                        <td>{{ item.cost if item.cost else '0' }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>
+                            {% if item.stock <= 5 %}
+                                <span class="badge low-stock">Low Stock</span>
+                            {% else %}
+                                <span class="badge in-stock">Available</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button onclick="editItem('{{item.id}}', '{{item.name}}', '{{item.cost}}', '{{item.price}}', '{{item.stock}}')" class="btn-edit">Modify</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
