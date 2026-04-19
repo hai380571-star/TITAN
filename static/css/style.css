@@ -1,13 +1,10 @@
-body { background: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 14px; }
-.stat-box { padding: 20px; border-radius: 12px; color: white; text-align: center; margin-bottom: 15px; }
-.bg-rev { background: linear-gradient(45deg, #4e73df, #224abe); }
-.bg-prof { background: linear-gradient(45deg, #1cc88a, #13855c); }
-.main-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-
-@media (max-width: 768px) {
-    .main-card { padding: 15px; margin: 5px; }
-    h2 { font-size: 1.4rem; }
-}
+body { background: #f0f2f5; font-family: 'Inter', sans-serif; }
+.main-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.stat-box { padding: 20px; border-radius: 10px; color: white; font-weight: bold; text-align: center; font-size: 1.1rem; }
+.bg-primary { background: linear-gradient(45deg, #0d6efd, #0b5ed7); }
+.bg-success { background: linear-gradient(45deg, #198754, #157347); }
+.list-group-item { cursor: pointer; transition: 0.3s; padding: 15px; }
+.list-group-item:hover { background: #343a40 !important; color: #ffc107 !important; }
 
 @media print {
     .no-print { display: none !important; }
