@@ -4,16 +4,15 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///titan_final.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///titan_pro.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- DATABASE MODELS ---
 class Company(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     addr = db.Column(db.String(200))
-    prefix = db.Column(db.String(10))
+    prefix = db.Column(db.String(10), default="INV")
     counter = db.Column(db.Integer, default=100)
     items = db.relationship('Item', backref='company', lazy=True)
     sales = db.relationship('Sale', backref='company', lazy=True)
@@ -35,21 +34,28 @@ class Sale(db.Model):
 
 @app.route('/')
 def index():
-    if Company.query.count() == 0:
-        c = Company(name="TITAN BIZ", addr="Murshidabad", prefix="TTN")
-        db.session.add(c)
-        db.session.commit()
-    
+    # Agar koi company nahi hai toh co=None jayega
     active_co = Company.query.first()
+    
+    if not active_co:
+        return render_template('index.html', co=None)
+
     today = datetime.now().strftime("%Y-%m-%d")
     today_sales = Sale.query.filter_by(company_id=active_co.id, date=today).all()
-    
     stats = {
         "revenue": sum(s.grand_total for s in today_sales),
-        "profit": sum(s.profit for s in today_sales),
-        "total_sales": len(today_sales)
+        "profit": sum(s.profit for s in today_sales)
     }
-    return render_template('index.html', co=active_co, all_cos=Company.query.all(), stats=stats)
+    co_items = Item.query.filter_by(company_id=active_co.id).all()
+    return render_template('index.html', co=active_co, items=co_items, stats=stats)
+
+@app.route('/create-company', methods=['POST'])
+def create_company():
+    data = request.json
+    new_co = Company(name=data['name'], addr=data['addr'], prefix=data['prefix'].upper(), counter=int(data['start']))
+    db.session.add(new_co)
+    db.session.commit()
+    return jsonify({"success": True})
 
 @app.route('/add-item', methods=['POST'])
 def add_item():
